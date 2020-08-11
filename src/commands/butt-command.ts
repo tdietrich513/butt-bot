@@ -18,7 +18,7 @@ class ButtCommand extends Command {
         const [fullMatch, pronoun, word] = text.match(this.groupPattern);
 
         // Only a 10% chance.
-        if (Math.random() > 0.1) return;
+        if (Math.random() > 0.05) return;
 
         const butt = word.endsWith('s') ? 'butts' : 'butt';
         const wordRx = new RegExp(word, 'gi');
