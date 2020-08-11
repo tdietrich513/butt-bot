@@ -1,0 +1,24 @@
+{
+  "name": "butt-bot",
+  "version": "1.0.0",
+  "description": "butts butts butts butts",
+  "main": "src/butt-bot.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-ts": "tsc",
+    "serve": "node -r dotenv/config dist/butt-bot.js"
+  },
+  "author": "Tom Dietrich",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^14.0.27",
+    "ts-node": "^8.10.2",
+    "tslint": "^6.1.3",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "discord-akairo": "^8.1.0",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0"
+  }
+}
