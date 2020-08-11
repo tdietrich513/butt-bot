@@ -1,6 +1,5 @@
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
-import { kMaxLength } from 'buffer';
 
 class ButtCommand extends Command {
     groupPattern: RegExp = /\b(big|small|my|your|their|his|her|this|the|a)\s(\S{2,})\b/i;
@@ -18,16 +17,14 @@ class ButtCommand extends Command {
         if (text.length > 120) return;
         const [fullMatch, pronoun, word] = text.match(this.groupPattern);
 
-        const roll = Math.floor(Math.random() * 10);
-
         // Only a 10% chance.
-        if (roll > 0) return;
+        if (Math.random() > 0.1) return;
 
         const butt = word.endsWith('s') ? 'butts' : 'butt';
         const wordRx = new RegExp(word, 'gi');
         const response = text.replace(wordRx, butt);
         message.channel.send(response)
-            .then(m => m.awaitReactions(() => true, { max: 1, time: 15000})
+            .then(m => m.awaitReactions(() => true, { max: 1, time: 60000})
                 .then((collected => {
                     if (collected.size == 0) return;
 
