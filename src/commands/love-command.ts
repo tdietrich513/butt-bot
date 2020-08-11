@@ -10,7 +10,7 @@ class LoveCommand extends Command {
     }
 
     exec(message: Message, args: any) : any {
-        if (Math.random() < 0.25) return;
+        if (Math.random() > 0.25) return;
         
         message.react("❤️")
             .catch(() => console.error("Failed to react"));
