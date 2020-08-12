@@ -17,7 +17,10 @@ class ButtCommand extends Command {
         if (text.length > 120) return;
         const [fullMatch, pronoun, word] = text.match(this.groupPattern);
 
-        // Only a 10% chance.
+        // don't try to replace butt with butt.
+        if (word == 'butt' || word == 'butts') return;
+
+        // Only a small chance.
         if (Math.random() > 0.05) return;
 
         const butt = word.endsWith('s') ? 'butts' : 'butt';
