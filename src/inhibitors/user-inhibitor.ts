@@ -14,7 +14,7 @@ class UserInhibitor extends Inhibitor {
     }
 
     exec(message: Message) : any {
-        return this.usersToIgnore.includes(message.author.id);
+        return this.usersToIgnore.includes(message.author.id);        
     }
 }
 

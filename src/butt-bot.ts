@@ -11,7 +11,10 @@ class BBClient extends AkairoClient {
     inhibitorHandler: InhibitorHandler;
 
     constructor() {
-        super({}, {});
+        super({
+            ownerID: process.env.BOT_OWNER
+        }, {});
+        
 
         this.commandHandler = new CommandHandler(this, {
             directory: __dirname + "/commands",

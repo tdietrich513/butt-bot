@@ -1,21 +1,28 @@
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
+import { stringify } from 'querystring';
 
 class ButtCommand extends Command {
-    triggerWords: Array<string> = [
-        "big",
-        "small",
-        "many",
-        "few",
-        "my",
-        "your",
-        "their",
-        "his",
-        "her",
-        "this",
-        "the",
-        "a"
-    ];
+    triggerWords: Map<string, number> = new Map([
+        ["big", .2],
+        ["small", .2],
+        ["great", .2],
+        ["good", .18],
+        ["bad", .18],
+        ["terrible", .2],
+        ["fancy", .2],
+        ["plain", .2],
+        ["many", .15],
+        ["few", .15],
+        ["my", .1],
+        ["your", .1],
+        ["their", .1],
+        ["his", .1],
+        ["her", .1],
+        ["this", .075],
+        ["the", .05],
+        ["a", .05]
+    ]);
 
     thanks: Array<string> = [
         "Thank you %n, I do my best!",
@@ -25,7 +32,8 @@ class ButtCommand extends Command {
         ">_>",
         "lol",
         "I like you too, %n.",
-        "🤣"
+        "🤣",
+        "💩"
     ]
 
     groupPattern: RegExp;
@@ -35,8 +43,9 @@ class ButtCommand extends Command {
             category: 'random'
         });
 
-        const triggerRx = new RegExp(`\\b(${ this.triggerWords.join('|') })\\s(\\S{2,})\\b`, 'i');
-        console.log(`CompiledRx: ${triggerRx.source}`);
+        let words = [].concat.apply([], Array.from(this.triggerWords.keys()))
+        const triggerRx = new RegExp(`\\b(${ words.join('|') })\\s(\\S{2,})\\b`, 'ig');
+        console.log(`Compiled Rx: ${triggerRx.source}`);
         this.regex = triggerRx;
         this.groupPattern = triggerRx;
     }
@@ -47,37 +56,53 @@ class ButtCommand extends Command {
         if (text.length > 120) return;
 
         // extract words from message.
-        const [fullMatch, leading, word] = text.match(this.groupPattern);
+        const allOptions = text.matchAll(this.groupPattern);
 
-        // Don't try to replace butt with butt.
-        if (word.includes('utt')) return;
+        let sentOne = false;
 
-        // Only a small chance.
-        if (Math.random() > 0.075) return;
+        while (!sentOne)
+        {
+            const cur = allOptions.next();
+            if (cur.done) return;
 
-        // Pick appropriate butt.
-        const butt =  word.endsWith("'s") ? "butt's" 
-                    : word.endsWith('s') ? 'butts' 
-                    : 'butt';
+            const [fullMatch, leading, word] = cur.value;
 
-        const wordRx = new RegExp(word, 'gi');
-        const response = text.replace(wordRx, butt);
-        message.channel.send(response)
-            .then(m => m.awaitReactions(() => true, { max: 1, time: 20000})
-                .then((collected => {
-                    if (collected.size == 0) return;
+            // don't try to replace butt with butt.
+            if (word.includes('utt')) continue;
+    
+            // check random against trigger word probability.
+            const chance = this.triggerWords.get(leading.toLowerCase());
+            const roll = Math.random();
+            console.log(`[r:${roll.toFixed(2)} c:${chance}] "${leading} ${word}" in "${text}"`);
+            if (roll > chance) continue;
 
-                    const reaction = collected.first();
-                    const user = reaction.users.cache.first();
-                    const userNick = message.guild.member(user).displayName;
-
-                    const thankNum = Math.floor(Math.random() * this.thanks.length);
-                    const thankMsg = this.thanks[thankNum].replace('%n', userNick);
-                    
-                    message.channel.send(thankMsg);
-                })).catch(() => console.error("Failed to check reactions"))
-            ).catch(() => console.error("Failed to send butt joke"));            
-    }
+            sentOne = true;
+    
+            // Pick appropriate butt.
+            let butt =  word.endsWith("'s") ? "butt's" 
+                        : word.endsWith('s') ? 'butts' 
+                        : 'butt';
+            if (word[0].toUpperCase() === word[0]) butt = butt.replace('b', 'B');
+    
+            const wordRx = new RegExp(word, 'gi');
+            const response = text.replace(wordRx, butt);
+            message.channel.send(response)
+                .then(m => m.awaitReactions(() => true, { max: 1, time: 45000})
+                    .then((collected => {
+                        if (collected.size == 0) return;
+    
+                        const reaction = collected.first();
+                        const user = reaction.users.cache.first();
+                        const userNick = message.guild.member(user).displayName;
+    
+                        const thankNum = Math.floor(Math.random() * this.thanks.length);
+                        const thankMsg = this.thanks[thankNum].replace('%n', userNick);
+                        
+                        message.channel.send(thankMsg);
+                    })).catch(() => console.error("Failed to check reactions"))
+                ).catch(() => console.error("Failed to send butt joke"));            
+            }
+        }
 }
 
 module.exports = ButtCommand;
