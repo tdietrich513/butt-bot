@@ -1,4 +1,4 @@
-import { AkairoClient, CommandHandler } from "discord-akairo";
+import { AkairoClient, CommandHandler, InhibitorHandler } from "discord-akairo";
 
 
 if (!process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN === "") {
@@ -8,6 +8,7 @@ if (!process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN === "") {
 
 class BBClient extends AkairoClient {
     commandHandler: CommandHandler;
+    inhibitorHandler: InhibitorHandler;
 
     constructor() {
         super({}, {});
@@ -17,7 +18,12 @@ class BBClient extends AkairoClient {
             prefix: "!!"
         });
 
+        this.inhibitorHandler = new InhibitorHandler(this, {
+            directory: __dirname + "/inhibitors"
+        })
+
         this.commandHandler.loadAll();
+        this.inhibitorHandler.loadAll();
     }
 }
 
