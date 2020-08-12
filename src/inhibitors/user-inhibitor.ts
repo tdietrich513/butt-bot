@@ -5,7 +5,7 @@ class UserInhibitor extends Inhibitor {
     usersToIgnore: string[];
 
     constructor() {
-        super('user', { });
+        super('user', { reason: 'blacklist' });
 
         const rawUsers = process.env.USERS_TO_IGNORE || "";
         this.usersToIgnore = rawUsers.split(',');
@@ -13,8 +13,8 @@ class UserInhibitor extends Inhibitor {
         console.log(`Ignoring messages from ids: ${ JSON.stringify(this.usersToIgnore )}`);
     }
 
-    exec(message: Message, args: any) : any {
-        return !this.usersToIgnore.includes(message.author.id);
+    exec(message: Message) : any {
+        return this.usersToIgnore.includes(message.author.id);
     }
 }
 

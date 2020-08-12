@@ -23,6 +23,7 @@ class BBClient extends AkairoClient {
         })
 
         this.commandHandler.loadAll();
+        this.commandHandler.useInhibitorHandler(this.inhibitorHandler);
         this.inhibitorHandler.loadAll();
     }
 }
