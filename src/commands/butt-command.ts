@@ -1,6 +1,5 @@
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
-import { stringify } from 'querystring';
 
 class ButtCommand extends Command {
     triggerWords: Map<string, number> = new Map([
@@ -36,6 +35,8 @@ class ButtCommand extends Command {
         "💩"
     ]
 
+    chanelLastPost: Map<string, Date> = new Map();
+
     groupPattern: RegExp;
 
     constructor() {
@@ -58,6 +59,11 @@ class ButtCommand extends Command {
         // extract words from message.
         const allOptions = text.matchAll(this.groupPattern);
 
+        // reduce probabilities of comment in the time after a comment.
+        const lastCommentTime = this.chanelLastPost.get(message.channel.id) || new Date(2020,1,1);
+        const minSince = (new Date().getTime() - lastCommentTime.getTime()) / 60000;
+        const spamAdjuster = (minSince < 30) ? minSince / 30 : 1;
+
         let sentOne = false;
 
         while (!sentOne)
@@ -68,15 +74,16 @@ class ButtCommand extends Command {
             const [fullMatch, leading, word] = cur.value;
 
             // don't try to replace butt with butt.
-            if (word.includes('utt')) continue;
+            if (word.includes('ut')) continue;
     
             // check random against trigger word probability.
-            const chance = this.triggerWords.get(leading.toLowerCase());
+            const chance = this.triggerWords.get(leading.toLowerCase()) * spamAdjuster;
             const roll = Math.random();
-            console.log(`[r:${roll.toFixed(2)} c:${chance}] "${leading} ${word}" in "${text}"`);
+            console.log(`[r:${((1- roll) * 100).toFixed(0)} c:${((1 - chance) * 100).toFixed(1)}] "${leading} ${word}" in "${text}"`);
             if (roll > chance) continue;
 
             sentOne = true;
+            this.chanelLastPost.set(message.channel.id, new Date());
     
             // Pick appropriate butt.
             let butt =  word.endsWith("'s") ? "butt's" 
@@ -84,7 +91,7 @@ class ButtCommand extends Command {
                         : 'butt';
             if (word[0].toUpperCase() === word[0]) butt = butt.replace('b', 'B');
     
-            const wordRx = new RegExp(word, 'gi');
+            const wordRx = new RegExp(`\\b${word}\\b`, 'gi');
             const response = text.replace(wordRx, butt);
             message.channel.send(response)
                 .then(m => m.awaitReactions(() => true, { max: 1, time: 45000})
