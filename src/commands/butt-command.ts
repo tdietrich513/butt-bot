@@ -40,12 +40,13 @@ class ButtCommand extends Command {
         if (text.length > 120) return false;
 
         // reduce probabilities of comment in the time after a comment.
-        const lastCommentTime = this.channelLastPost.get(message.channel.id) || new Date(2020,1,1);
+        if(!this.channelLastPost.has(message.channel.id)) this.channelLastPost.set(message.channel.id, new Date());
+        const lastCommentTime = this.channelLastPost.get(message.channel.id);
         const minSince = (new Date().getTime() - lastCommentTime.getTime()) / 60000;
         const spamAdjuster = (minSince < 30) ? minSince / 30 : 1;
 
         // check random against trigger probability.
-        const chance = .075 * spamAdjuster;
+        const chance = .05 * spamAdjuster;
         const roll = Math.random();
         if (roll > chance) return false;
 
