@@ -1,115 +1,125 @@
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
+import { Lexicon, RuleSet, BrillPOSTagger } from 'natural';
 
 class ButtCommand extends Command {
-    triggerWords: Map<string, number> = new Map([
-        ["big", .2],
-        ["small", .2],
-        ["great", .2],
-        ["good", .18],
-        ["bad", .18],
-        ["terrible", .2],
-        ["fancy", .2],
-        ["plain", .2],
-        ["many", .15],
-        ["few", .15],
-        ["my", .1],
-        ["your", .1],
-        ["their", .1],
-        ["his", .1],
-        ["her", .1],
-        ["this", .075],
-        ["the", .05],
-        ["a", .05]
-    ]);
-
     thanks: Array<string> = [
         "Thank you %n, I do my best!",
         "It's always nice to be appreciated, %n.",
         "%n enjoys my work!",
+        "0_0",
+        "T.T",
+        "^_^",
         "<_<",
         ">_>",
         "lol",
+        "o7",
         "I like you too, %n.",
         "🤣",
         "💩"
     ]
 
-    chanelLastPost: Map<string, Date> = new Map();
+    channelLastPost: Map<string, Date> = new Map();
+    messageBuffer: Map<string, { taggedWords: { token: string, tag:string }[]}> = new Map();
 
-    groupPattern: RegExp;
+    tagger: BrillPOSTagger;
 
     constructor() {
         super('butts', {
             category: 'random'
         });
 
-        let words = [].concat.apply([], Array.from(this.triggerWords.keys()))
-        const triggerRx = new RegExp(`\\b(${ words.join('|') })\\s(\\S{2,})\\b`, 'ig');
-        console.log(`Compiled Rx: ${triggerRx.source}`);
-        this.regex = triggerRx;
-        this.groupPattern = triggerRx;
+        const lexicon = new Lexicon('EN', 'NN');
+        const ruleSet = new RuleSet('EN');
+        this.tagger  = new BrillPOSTagger(lexicon, ruleSet);
+    }
+
+    condition(message: Message): boolean {
+        const text = message.cleanContent;
+        // ignore long messages.
+        if (text.length > 120) return false;
+
+        // reduce probabilities of comment in the time after a comment.
+        const lastCommentTime = this.channelLastPost.get(message.channel.id) || new Date(2020,1,1);
+        const minSince = (new Date().getTime() - lastCommentTime.getTime()) / 60000;
+        const spamAdjuster = (minSince < 30) ? minSince / 30 : 1;
+
+        // check random against trigger probability.
+        const chance = .15 * spamAdjuster;
+        const roll = Math.random();
+        if (roll > chance) return false;
+
+        // NLP time
+        const output = JSON.stringify(this.tagger.tag(text.replace(/[^a-z'-]+/gi, ' ').split(' ').filter(s => s !== ' ' && s !==  '')));
+        const sentence: { taggedWords: { token: string, tag:string }[]} = JSON.parse(output);
+
+        // Make sure there are some nouns.
+        if (!sentence.taggedWords.some(t => t.tag.startsWith("NN"))) return false;
+
+        this.messageBuffer.set(message.id, sentence);
+        this.channelLastPost.set(message.channel.id, new Date());
+        return true;
     }
 
     exec(message: Message, args: any) : any {
         const text = message.cleanContent;
-        // ignore long messages.
-        if (text.length > 120) return;
+        const sentence = this.messageBuffer.get(message.id);
+        this.messageBuffer.delete(message.id);
 
-        // extract words from message.
-        const allOptions = text.matchAll(this.groupPattern);
 
-        // reduce probabilities of comment in the time after a comment.
-        const lastCommentTime = this.chanelLastPost.get(message.channel.id) || new Date(2020,1,1);
-        const minSince = (new Date().getTime() - lastCommentTime.getTime()) / 60000;
-        const spamAdjuster = (minSince < 30) ? minSince / 30 : 1;
+        // only attempt to replace nouns.
+        const nouns = sentence.taggedWords.filter(w => w.tag.startsWith("NN"));
 
-        let sentOne = false;
+        // select random noun;
+        const word = nouns[Math.floor(Math.random() * nouns.length)];
 
-        while (!sentOne)
-        {
-            const cur = allOptions.next();
-            if (cur.done) return;
+        console.info(`Message:"${text}"\n  Nouns: ${JSON.stringify(nouns)}\n  Choice: ${word.token}`);
 
-            const [fullMatch, leading, word] = cur.value;
-
-            // don't try to replace butt with butt.
-            if (word.includes('ut')) continue;
-    
-            // check random against trigger word probability.
-            const chance = this.triggerWords.get(leading.toLowerCase()) * spamAdjuster;
-            const roll = Math.random();
-            console.log(`[r:${((1- roll) * 100).toFixed(0)} c:${((1 - chance) * 100).toFixed(1)}] "${leading} ${word}" in "${text}"`);
-            if (roll > chance) continue;
-
-            sentOne = true;
-            this.chanelLastPost.set(message.channel.id, new Date());
-    
-            // Pick appropriate butt.
-            let butt =  word.endsWith("'s") ? "butt's" 
-                        : word.endsWith('s') ? 'butts' 
-                        : 'butt';
-            if (word[0].toUpperCase() === word[0]) butt = butt.replace('b', 'B');
-    
-            const wordRx = new RegExp(`\\b${word}\\b`, 'gi');
-            const response = text.replace(wordRx, butt);
-            message.channel.send(response)
-                .then(m => m.awaitReactions(() => true, { max: 1, time: 45000})
-                    .then((collected => {
-                        if (collected.size == 0) return;
-    
-                        const reaction = collected.first();
-                        const user = reaction.users.cache.first();
-                        const userNick = message.guild.member(user).displayName;
-    
-                        const thankNum = Math.floor(Math.random() * this.thanks.length);
-                        const thankMsg = this.thanks[thankNum].replace('%n', userNick);
-                        
-                        message.channel.send(thankMsg);
-                    })).catch(() => console.error("Failed to check reactions"))
-                ).catch(() => console.error("Failed to send butt joke"));            
+        // Pick appropriate butt.
+        let butt: string;
+        switch(word.tag){
+            case "NN": {
+                butt = "butt";
+                break;
+            }
+            case "NNP": {
+                butt = "Butt";
+                break;
+            }
+            case "NNPS": {
+                butt = "Butts";
+                break;
+            }
+            case "NNS": {
+                butt = "butts";
+                break;
+            }
+            default: {
+                console.log(`Unknown token: ${word.tag}`);
+                butt = "butt";
+                break;
             }
         }
+     
+        const wordRx = new RegExp(`\\b${word.token}\\b`, 'gi');
+        const response = text.replace(wordRx, butt);
+        message.channel.send(response)
+            .then(m => m.awaitReactions(() => true, { max: 1, time: 45000})
+                .then((collected => {
+                    if (collected.size == 0) return;
+
+                    const reaction = collected.first();
+                    const user = reaction.users.cache.first();
+                    const userNick = message.guild.member(user).displayName;
+
+                    const thankNum = Math.floor(Math.random() * this.thanks.length);
+                    const thankMsg = this.thanks[thankNum].replace('%n', userNick);
+                    
+                    message.channel.send(thankMsg);
+                })).catch(() => console.error("Failed to check reactions"))
+            ).catch(() => console.error("Failed to send butt joke"));            
+        }
+    
 }
 
 module.exports = ButtCommand;
