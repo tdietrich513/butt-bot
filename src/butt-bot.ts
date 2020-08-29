@@ -45,4 +45,3 @@ client.on('ready', () => {
 });
 
 console.log("Butt-Bot Logged in!");
-console.log(`guildCount: ${ client.guilds.cache.size }`);
