@@ -45,7 +45,7 @@ class ButtCommand extends Command {
         const spamAdjuster = (minSince < 30) ? minSince / 30 : 1;
 
         // check random against trigger probability.
-        const chance = .15 * spamAdjuster;
+        const chance = .075 * spamAdjuster;
         const roll = Math.random();
         if (roll > chance) return false;
 
