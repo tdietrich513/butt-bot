@@ -10,4 +10,4 @@ The bot randomly triggers, to avoid spamming a channel the odds of triggering ar
 The bot also appreciates it when people react to it's jokes and talk about butts in general.
 
 ## WHY?
-¯\_(ツ)_/¯
+¯\\_(ツ)_/¯
