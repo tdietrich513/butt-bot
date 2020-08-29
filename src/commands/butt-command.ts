@@ -68,7 +68,7 @@ class ButtCommand extends Command {
 
 
         // only attempt to replace nouns.
-        const nouns = sentence.taggedWords.filter(w => w.tag.startsWith("NN"));
+        const nouns = sentence.taggedWords.filter(w => w.tag.startsWith("NN") && w.token.length > 1);
 
         // select random noun;
         const word = nouns[Math.floor(Math.random() * nouns.length)];
