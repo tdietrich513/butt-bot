@@ -1,6 +1,6 @@
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
-import { Lexicon, RuleSet, BrillPOSTagger } from 'natural';
+import { Lexicon, RuleSet, BrillPOSTagger, WordTokenizer } from 'natural';
 
 class ButtCommand extends Command {
     thanks: Array<string> = [
@@ -20,9 +20,9 @@ class ButtCommand extends Command {
     ]
 
     channelLastPost: Map<string, Date> = new Map();
-    messageBuffer: Map<string, { taggedWords: { token: string, tag:string }[]}> = new Map();
-
+    messageBuffer: Map<string, { taggedWords: { token: string, tag:string }[]}> = new Map()
     tagger: BrillPOSTagger;
+    tokenizer: WordTokenizer;
 
     constructor() {
         super('butts', {
@@ -32,6 +32,7 @@ class ButtCommand extends Command {
         const lexicon = new Lexicon('EN', 'NN');
         const ruleSet = new RuleSet('EN');
         this.tagger  = new BrillPOSTagger(lexicon, ruleSet);
+        this.tokenizer = new WordTokenizer();
     }
 
     condition(message: Message): boolean {
@@ -51,7 +52,7 @@ class ButtCommand extends Command {
         if (roll > chance) return false;
 
         // NLP time
-        const output = JSON.stringify(this.tagger.tag(text.replace(/[^a-z'-]+/gi, ' ').split(' ').filter(s => s !== ' ' && s !==  '')));
+        const output = JSON.stringify(this.tagger.tag(this.tokenizer.tokenize(message.cleanContent)));
         const sentence: { taggedWords: { token: string, tag:string }[]} = JSON.parse(output);
 
         // Make sure there are some nouns.
