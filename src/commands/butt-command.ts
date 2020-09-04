@@ -1,6 +1,6 @@
 import { Command } from 'discord-akairo';
 import { Message } from 'discord.js';
-import { Lexicon, RuleSet, BrillPOSTagger, WordTokenizer } from 'natural';
+import { Lexicon, RuleSet, BrillPOSTagger, Tokenizer, RegexpTokenizer } from 'natural';
 
 class ButtCommand extends Command {
     thanks: Array<string> = [
@@ -22,7 +22,7 @@ class ButtCommand extends Command {
     channelLastPost: Map<string, Date> = new Map();
     messageBuffer: Map<string, { taggedWords: { token: string, tag:string }[]}> = new Map()
     tagger: BrillPOSTagger;
-    tokenizer: WordTokenizer;
+    tokenizer: Tokenizer;
 
     constructor() {
         super('butts', {
@@ -32,7 +32,9 @@ class ButtCommand extends Command {
         const lexicon = new Lexicon('EN', 'NN');
         const ruleSet = new RuleSet('EN');
         this.tagger  = new BrillPOSTagger(lexicon, ruleSet);
-        this.tokenizer = new WordTokenizer();
+        this.tokenizer = new RegexpTokenizer({
+            pattern: /[^A-Za-zА-Яа-я0-9_\']+/g
+        });
     }
 
     condition(message: Message): boolean {
