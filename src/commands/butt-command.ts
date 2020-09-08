@@ -38,7 +38,7 @@ class ButtCommand extends Command {
     condition(message: Message): boolean {
         const text = message.cleanContent;
         // ignore long messages.
-        if (text.length > 120) return false;
+        if (text.length > 0) return false;
 
         // reduce probabilities of comment in the time after a comment.
         if(!this.channelLastPost.has(message.channel.id)) this.channelLastPost.set(message.channel.id, new Date());
