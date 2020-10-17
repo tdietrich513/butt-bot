@@ -54,7 +54,11 @@ class ButtCommand extends Command {
         if (roll > chance) return false;
 
         // NLP time
-        const output = JSON.stringify(this.tagger.tag(this.tokenizer.tokenize(message.cleanContent)));
+        const tokens = this.tokenizer.tokenize(message.cleanContent);
+        // Don't send one word replies.
+	    if (tokens.length === 1) return false;
+
+        const output = JSON.stringify(this.tagger.tag(tokens));
         const sentence: { taggedWords: { token: string, tag:string }[]} = JSON.parse(output);
 
         // Make sure there are some nouns.
