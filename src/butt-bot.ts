@@ -1,6 +1,4 @@
 import { AkairoClient, CommandHandler, InhibitorHandler } from "discord-akairo";
-import * as DBL from "dblapi.js"
-
 
 if (!process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN === "") {
     console.error("Could not find the DISCORD_BOT_TOKEN environment variable!");

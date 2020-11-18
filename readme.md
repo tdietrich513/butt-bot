@@ -9,5 +9,7 @@ The bot randomly triggers, to avoid spamming a channel the odds of triggering ar
 
 The bot also appreciates it when people react to it's jokes and talk about butts in general.
 
+You can force a joke with `!!butt <message to target>` or `!!dadjoke`
+
 ## WHY?
 ¯\\_(ツ)_/¯

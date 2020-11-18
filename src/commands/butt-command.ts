@@ -38,9 +38,16 @@ class ButtCommand extends Command {
     }
 
     condition(message: Message): boolean {
-        const text = message.cleanContent;
+        let text = message.cleanContent;
+        let forced = false;
+
+        if (text.startsWith("!!butt")) {
+            forced = true;
+            text = text.slice(7);
+        }
+
         // ignore long messages.
-        if (text.length > 120) return false;
+        if (!forced && text.length > 120) return false;
 
         // reduce probabilities of comment in the time after a comment.
         if(!this.channelLastPost.has(message.channel.id)) this.channelLastPost.set(message.channel.id, new Date());
@@ -51,12 +58,12 @@ class ButtCommand extends Command {
         // check random against trigger probability.
         const chance = .05 * spamAdjuster;
         const roll = Math.random();
-        if (roll > chance) return false;
+        if (!forced && roll > chance) return false;
 
         // NLP time
-        const tokens = this.tokenizer.tokenize(message.cleanContent);
+        const tokens = this.tokenizer.tokenize(text);
         // Don't send one word replies.
-	    if (tokens.length === 1) return false;
+	    if (!forced && tokens.length === 1) return false;
 
         const output = JSON.stringify(this.tagger.tag(tokens));
         const sentence: { taggedWords: { token: string, tag:string }[]} = JSON.parse(output);
@@ -70,7 +77,12 @@ class ButtCommand extends Command {
     }
 
     exec(message: Message, args: any) : any {
-        const text = message.cleanContent;
+        let text = message.cleanContent;
+
+        if (text.startsWith("!!butt")) {
+            text = text.slice(7);
+        }
+
         const sentence = this.messageBuffer.get(message.id);
         this.messageBuffer.delete(message.id);
 
@@ -111,22 +123,26 @@ class ButtCommand extends Command {
      
         const wordRx = new RegExp(`\\b${word.token}\\b`, 'gi');
         const response = text.replace(wordRx, butt);
-        message.channel.send(response)
-            .then(m => m.awaitReactions(() => true, { max: 1, time: 45000})
-                .then((collected => {
-                    if (collected.size == 0) return;
-
-                    const reaction = collected.first();
-                    const user = reaction.users.cache.first();
-                    const userNick = message.guild.member(user).displayName;
-
-                    const thankNum = Math.floor(Math.random() * this.thanks.length);
-                    const thankMsg = this.thanks[thankNum].replace('%n', userNick);
-                    
-                    message.channel.send(thankMsg);
-                })).catch(() => console.error("Failed to check reactions"))
-            ).catch(() => console.error("Failed to send butt joke"));            
-        }
+        message.channel.startTyping();
+        setTimeout(() => {
+            message.channel.stopTyping();
+            message.channel.send(response)
+                .then(m => m.awaitReactions(() => true, { max: 1, time: 45000})
+                    .then((collected => {
+                        if (collected.size == 0) return;
+    
+                        const reaction = collected.first();
+                        const user = reaction.users.cache.first();
+                        const userNick = message.guild.member(user).displayName;
+    
+                        const thankNum = Math.floor(Math.random() * this.thanks.length);
+                        const thankMsg = this.thanks[thankNum].replace('%n', userNick);
+                        
+                        message.channel.send(thankMsg);
+                    })).catch(() => console.error("Failed to check reactions"))
+                ).catch(() => console.error("Failed to send butt joke"));            
+            }, Math.floor(response.length /.0066));
+    }
     
 }
 
