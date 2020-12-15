@@ -9,27 +9,10 @@ class DadJokeCommand extends Command {
 
     constructor() {
         super('dadjoke', {
+	    prefix: "!!",
+            aliases: ["dadjoke"],
             category: 'random'
         });
-    }
-
-    condition(message: Message): boolean {
-        if(message.cleanContent.startsWith('!!dadjoke')) return true;
-
-        // reduce probabilities of comment in the time after a comment.
-        if(!this.channelLastPost.has(message.channel.id)) this.channelLastPost.set(message.channel.id, new Date());
-        const lastCommentTime = this.channelLastPost.get(message.channel.id);
-        const minSince = (new Date().getTime() - lastCommentTime.getTime()) / 60000;
-        const spamAdjuster = (minSince < 30) ? minSince / 30 : 1;
-
-        // check random against trigger probability.
-        const chance = .01 * spamAdjuster;
-        const roll = Math.random();
-        if (roll > chance) return false;
-
-        this.channelLastPost.set(message.channel.id, new Date());
-
-        return true;
     }
 
     exec(message: Message, args: any): any {
@@ -56,7 +39,7 @@ class DadJokeCommand extends Command {
                 setTimeout(() => {
                     message.channel.stopTyping();
                     message.channel.send(body);
-                }, Math.floor(body.length /.0066));
+                }, Math.floor(body.length /.012));
             });
         });
     }

@@ -41,7 +41,7 @@ class ButtCommand extends Command {
         let text = message.cleanContent;
         let forced = false;
 
-        if (text.startsWith("!!butt")) {
+        if (text.startsWith("!!butt ")) {
             forced = true;
             text = text.slice(7);
         }
@@ -79,7 +79,7 @@ class ButtCommand extends Command {
     exec(message: Message, args: any) : any {
         let text = message.cleanContent;
 
-        if (text.startsWith("!!butt")) {
+        if (text.startsWith("!!butt ")) {
             text = text.slice(7);
         }
 
@@ -88,7 +88,7 @@ class ButtCommand extends Command {
 
 
         // only attempt to replace nouns.
-        const nouns = sentence.taggedWords.filter(w => w.tag.startsWith("NN") && w.token.length > 1);
+        const nouns = sentence.taggedWords.filter(w => w && w.tag.startsWith("NN") && w.token.length > 1);
 
         // select random noun;
         const word = nouns[Math.floor(Math.random() * nouns.length)];
@@ -141,7 +141,7 @@ class ButtCommand extends Command {
                         message.channel.send(thankMsg);
                     })).catch(() => console.error("Failed to check reactions"))
                 ).catch(() => console.error("Failed to send butt joke"));            
-            }, Math.floor(response.length /.0066));
+            }, Math.floor(response.length /.012));
     }
     
 }

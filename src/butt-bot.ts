@@ -1,4 +1,5 @@
 import { AkairoClient, CommandHandler, InhibitorHandler } from "discord-akairo";
+import * as DBL from "dblapi.js";
 
 if (!process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_BOT_TOKEN === "") {
     console.error("Could not find the DISCORD_BOT_TOKEN environment variable!");
@@ -31,15 +32,14 @@ class BBClient extends AkairoClient {
 }
 
 const client = new BBClient();
-//const dbl = new DBL(process.env.TOP_GG_TOKEN, client);
-
-client.login(process.env.DISCORD_BOT_TOKEN);
+const dbl = new DBL(process.env.TOP_GG_TOKEN, client);
 
 client.on('ready', () => {
 	setInterval(() => {
-		console.log(`guildCount: ${ client.guilds.cache.size }`);
-		//dbl.postStats(client.guilds.cache.size);
-		}, 1800000);
+		dbl.postStats(client.guilds.cache.size);
+        }, 1800000);
 });
+
+client.login(process.env.DISCORD_BOT_TOKEN);
 
 console.log("Butt-Bot Logged in!");
